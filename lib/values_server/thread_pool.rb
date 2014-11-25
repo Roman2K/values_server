@@ -37,7 +37,6 @@ module ValuesServer
         block.call
       end
     rescue Exception
-      # TODO exception handler as a configurable callback
       $stderr.puts ValuesServer.format_exc($!)
       raise
     end

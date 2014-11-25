@@ -17,13 +17,7 @@ module ValuesServer
   class Server
     def initialize(socket_path, values_map, acceptors: 1, handlers: 8)
       @values_map = values_map
-
-      # TODO one thread for acceptor + handler?
-      # TODO single (main) thread?
       @acceptors = ThreadPool.new(acceptors)
-
-      # TODO move socket-related code (accept, pooling, transport protocol) to
-      # another more abstract project
       @handlers = ThreadPool.new(handlers)
       @server = UNIXServer.new(socket_path)
 

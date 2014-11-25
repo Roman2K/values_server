@@ -1,11 +1,12 @@
-test backoff
+test
 
-test failsafe
-
-test threadpool
-
-timeout
-
-error handling
-
-#TODO
+threadpool
+  - move out to a standalone library?
+  - timeout
+  - test concurrency
+  - test failsafe
+  - test backoff
+  - support one thread for acceptor + handler?
+  - support main thread?
+  - error handling (acceptor + handler)
+  - logging (errors, debug)
