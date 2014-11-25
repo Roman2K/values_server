@@ -1,6 +1,5 @@
 require 'socket'
 require 'fileutils'
-require 'thread'
 
 module ValuesServer
   ##
