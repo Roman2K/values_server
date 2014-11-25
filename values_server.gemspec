@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name     = 'values_server'
-  spec.version  = '0.1.0'
+  spec.version  = '0.' + `git rev-parse HEAD`
   spec.authors  = ["Roman Le Négrate"]
   spec.email    = ["roman.lenegrate@gmail.com"]
   spec.summary  = "Dynamic values server"
