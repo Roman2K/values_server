@@ -12,7 +12,7 @@ module ValuesServer
   #
   # Example client:
   #
-  #   $ echo cpu | socat UNIX:/tmp/tmux_status.sock -
+  #   $ echo cpu | nc -U /tmp/tmux_status.sock
   #
   class Server
     def initialize(socket_path, values_map, acceptors: 1, handlers: 8)
