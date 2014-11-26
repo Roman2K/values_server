@@ -14,26 +14,15 @@ module ValuesServer
   #   $ echo cpu | nc -U /tmp/tmux_status.sock
   #
   class Server
-    def initialize(socket_path, values_map, acceptors: 1, handlers: 8)
+    def initialize(socket_path, values_map)
       @values_map = values_map
-      @acceptors = ThreadPool.new(acceptors)
-      @handlers = ThreadPool.new(handlers)
       @server = UNIXServer.new(socket_path)
-
       puts "Listening at #{@server.path}"
-
-      acceptor = lambda { Utils::Failsafe.new.execute { accept_connections } }
-      @acceptors.size.times { @acceptors.execute(&acceptor) }
-    end
-
-    def join
-      @acceptors.join
-      @handlers.join
-    ensure
-      unless @server.closed?
-        path = @server.path
-        @server.close
-        FileUtils.rm(path) if File.socket? path
+      begin
+        accept_connections
+      ensure
+        @server.close unless @server.closed?
+        FileUtils.rm(socket_path) if File.socket? socket_path
       end
     end
 
@@ -42,64 +31,17 @@ module ValuesServer
     def accept_connections
       loop do
         begin
-          socket = @server.accept
+          sock = @server.accept
         rescue Errno::EBADF
           return
         end
-        @handlers.execute(socket) do |sock|
-          begin
-            key = sock.gets.chomp
-            if value = @values_map[key]
-              sock.write(value.call.to_s)
-            end
-          ensure
-            sock.close unless sock.closed?
+        begin
+          key = sock.gets.chomp
+          if value = @values_map[key]
+            sock.write(value.call.to_s)
           end
-        end
-      end
-    end
-
-    module Utils
-      class Failsafe
-        def initialize(success_period: 3600)
-          @success_period = success_period
-          reset_backoff
-        end
-
-        def execute
-          yield
-        rescue Exception
-          $stderr.puts ValuesServer.format_exc($!)
-          if @time < Time.now - @success_period
-            reset_backoff
-          end
-          @backoff.attempts += 1
-          sleep @backoff.time
-          retry
-        end
-
-      private
-
-        def reset_backoff
-          @backoff = ExponentialBackoff.new
-          @time = Time.now
-        end
-      end
-
-      class ExponentialBackoff
-        def initialize
-          @attempts = 0
-        end
-
-        attr_reader :attempts
-
-        def attempts=(n)
-          @attempts = n.to_i
-        end
-
-        def time
-          @attempts > 0 or return 0.0
-          rand * (2 ** (@attempts - 1))
+        ensure
+          sock.close unless sock.closed?
         end
       end
     end
